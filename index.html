@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Tetris for everyone!</title>
+    <style>
+        body {
+            background-color: grey;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #game-container {
+            border: 2px solid white;
+            box-shadow: 0 0 20px black;
+            line-height: 0; 
+        }
+
+        canvas {
+            background-color: darkgreen;
+            display: block;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Tetris JS</h1>
+
+    <div id="game-container">
+        <canvas id="tetris" width="240" height="400"></canvas>
+    </div>
+
+    <p>Maybe later: Controls y points (Not really)</p>
+
+    <script src="tetris.js"></script>
+</body>
+</html>
