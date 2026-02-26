@@ -1,0 +1,26 @@
+body {
+            background-color: grey;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #game-container {
+            border: 2px solid white;
+            box-shadow: 0 0 20px black;
+            line-height: 0; 
+        }
+
+        canvas {
+            background-color: darkgreen;
+            display: block;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
