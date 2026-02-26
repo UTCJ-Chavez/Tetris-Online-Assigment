@@ -1,12 +1,12 @@
 /**
- * Tetris - Versión Final Integrada
+ * Tetris - Versión Corregida (Ajuste de bordes y escalado dinámico)
  */
 class Tetris {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
         
-        // Ajuste dinámico de rejilla
+        // 1. AJUSTE DINÁMICO: Se adapta a cualquier tamaño de canvas en el HTML
         this.width = 10;
         this.height = 20;
         this.gridSize = this.canvas.width / this.width; 
@@ -36,7 +36,7 @@ class Tetris {
             // S piece
             [[[0,4,4],[4,4,0],[0,0,0]], [[0,4,0],[0,4,4],[0,0,4]], [[0,0,0],[0,4,4],[4,4,0]], [[4,0,0],[4,4,0],[0,4,0]]],
             // Z piece
-            [[5,5,0],[0,5,5],[0,0,0]], [[0,0,5],[0,5,5],[0,5,0]], [[0,0,0],[5,5,0],[0,5,5]], [[0,5,0],[5,5,0],[5,0,0]]],
+            [[[5,5,0],[0,5,5],[0,0,0]], [[0,0,5],[0,5,5],[0,5,0]], [[0,0,0],[5,5,0],[0,5,5]], [[0,5,0],[5,5,0],[5,0,0]]],
             // J piece
             [[[6,0,0],[6,6,6],[0,0,0]], [[0,6,6],[0,6,0],[0,6,0]], [[0,0,0],[6,6,6],[0,0,6]], [[0,6,0],[0,6,0],[6,6,0]]],
             // L piece
@@ -50,6 +50,8 @@ class Tetris {
         this.pieceIndex = Math.floor(Math.random() * this.pieces.length);
         this.currentRotation = 0;
         this.currentPiece = this.pieces[this.pieceIndex][this.currentRotation];
+        
+        // Posición inicial centrada
         this.currentX = Math.floor((this.width - this.currentPiece[0].length) / 2);
         this.currentY = 0;
 
@@ -58,13 +60,19 @@ class Tetris {
         }
     }
 
+    // CORRECCIÓN: Ahora ignora las celdas vacías (0) de la matriz de la pieza
     isValidPosition(piece, x, y) {
         for (let py = 0; py < piece.length; py++) {
             for (let px = 0; px < piece[py].length; px++) {
                 if (!piece[py][px]) continue; 
+
                 let boardX = x + px;
                 let boardY = y + py;
+
+                // Límites de las paredes y el suelo
                 if (boardX < 0 || boardX >= this.width || boardY >= this.height) return false;
+                
+                // Colisión con bloques ya puestos
                 if (boardY >= 0 && (this.board[boardY] & (1 << boardX))) return false;
             }
         }
@@ -98,12 +106,14 @@ class Tetris {
         }
         const points = [0, 100, 300, 500, 800];
         this.score += points[Math.min(linesCleared, 4)];
+        console.log("Score:", this.score);
     }
 
     rotate() {
         let nextRotation = (this.currentRotation + 1) % 4;
         let rotatedPiece = this.pieces[this.pieceIndex][nextRotation];
         const kicks = [0, -1, 1, -2, 2];
+        
         for (let kick of kicks) {
             if (this.isValidPosition(rotatedPiece, this.currentX + kick, this.currentY)) {
                 this.currentX += kick;
@@ -124,16 +134,19 @@ class Tetris {
     }
 
     render() {
+        // Limpiar el canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // Dibujar tablero
+
+        // Dibujar bloques fijos (el tablero)
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (this.board[y] & (1 << x)) {
-                    this.drawSquare(x, y, '#0ad');
+                    this.drawSquare(x, y, '#0ad'); // Color para bloques fijos
                 }
             }
         }
-        // Dibujar pieza actual
+
+        // Dibujar la pieza que está cayendo
         const pieceColor = this.colors[this.pieceIndex + 1];
         for (let py = 0; py < this.currentPiece.length; py++) {
             for (let px = 0; px < this.currentPiece[py].length; px++) {
@@ -142,6 +155,7 @@ class Tetris {
                 }
             }
         }
+        
         if (this.gameOver) {
             this.ctx.fillStyle = 'rgba(0,0,0,0.8)';
             this.ctx.fillRect(0,0, this.canvas.width, this.canvas.height);
@@ -154,13 +168,16 @@ class Tetris {
 
     drawSquare(x, y, color) {
         this.ctx.fillStyle = color;
+        // El cuadrado relleno
         this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+        // El borde para que se distingan los bloques
         this.ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        this.ctx.lineWidth = 1;
         this.ctx.strokeRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
     }
 }
 
-// Inicialización del juego
+// --- Lógica de Control y Loop Principal ---
 const game = new Tetris('tetris');
 let lastTime = 0;
 let dropCounter = 0;
@@ -170,20 +187,36 @@ function update(time = 0) {
     const deltaTime = time - lastTime;
     lastTime = time;
     dropCounter += deltaTime;
+
     if (dropCounter > dropInterval) {
         game.moveDown();
         dropCounter = 0;
     }
+
     game.render();
     if (!game.gameOver) requestAnimationFrame(update);
 }
 
 document.addEventListener('keydown', event => {
     if (game.gameOver) return;
-    if (event.key === 'ArrowLeft' && game.isValidPosition(game.currentPiece, game.currentX - 1, game.currentY)) game.currentX--;
-    if (event.key === 'ArrowRight' && game.isValidPosition(game.currentPiece, game.currentX + 1, game.currentY)) game.currentX++;
-    if (event.key === 'ArrowDown') game.moveDown();
-    if (event.key === 'ArrowUp') game.rotate();
+    
+    // CORRECCIÓN: Quitamos la validación extra que impedía tocar bordes
+    if (event.key === 'ArrowLeft') {
+        if (game.isValidPosition(game.currentPiece, game.currentX - 1, game.currentY)) {
+            game.currentX--;
+        }
+    }
+    if (event.key === 'ArrowRight') {
+        if (game.isValidPosition(game.currentPiece, game.currentX + 1, game.currentY)) {
+            game.currentX++;
+        }
+    }
+    if (event.key === 'ArrowDown') {
+        game.moveDown();
+    }
+    if (event.key === 'ArrowUp') {
+        game.rotate();
+    }
 });
 
 update();
