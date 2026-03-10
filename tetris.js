@@ -18,7 +18,7 @@ class Tetris {
         this.colors = [
             null,
             '#00f2ff', // I
-            '#fffc00', // O
+            '#ff00aa', // O
             '#a000ff', // T
             '#00ff00', // S
             '#ff0000', // Z
